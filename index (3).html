@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>English → Hindi Learning App</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: #ffffff;
+    color: #31333f;
+    font-size: 16px;
+  }
+
+  .page {
+    max-width: 730px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* HEADER */
+  .header { text-align: center; margin-bottom: 32px; }
+  .header h1 { font-size: 2rem; font-weight: 700; color: #ff4b4b; line-height: 1.25; }
+  .header h3 { font-size: 1.1rem; font-weight: 600; color: #31333f; margin-top: 10px; }
+
+  /* DIVIDER */
+  hr { border: none; border-top: 1px solid #e6e6e6; margin: 28px 0; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 1.2rem; font-weight: 700;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+    color: #31333f;
+  }
+
+  /* TEXT INPUT */
+  input[type=text], textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: #f0f2f6;
+    color: #31333f;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  input[type=text]:focus, textarea:focus {
+    border-color: #ff4b4b;
+    box-shadow: 0 0 0 2px #ff4b4b18;
+    background: #fff;
+  }
+  textarea { resize: vertical; min-height: 150px; }
+  textarea::placeholder { color: #aaa; }
+
+  /* PDF UPLOAD */
+  .upload-box {
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    background: #f0f2f6;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .upload-box:hover { background: #e8eaf0; }
+  .upload-icon { font-size: 1.7rem; color: #aaa; flex-shrink: 0; }
+  .upload-text p    { font-weight: 600; color: #31333f; font-size: 1rem; }
+  .upload-text small { color: #9a9a9a; font-size: .83rem; }
+  .browse-btn {
+    margin-left: auto;
+    background: #fff;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #31333f;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .browse-btn:hover { background: #f0f2f6; }
+  #pdf-input { display: none; }
+  #pdf-name { margin-top: 10px; font-size: .9rem; color: #09ab3b; font-weight: 600; display: none; }
+
+  /* WARNING */
+  .warn-box {
+    background: #fff3cd; border: 1px solid #ffc107;
+    border-radius: 8px; padding: 10px 16px;
+    font-size: .92rem; color: #856404;
+    display: none; margin-bottom: 14px;
+  }
+  .warn-box.show { display: block; }
+
+  /* BUTTONS */
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn {
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    background: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #31333f;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .15s, transform .1s;
+  }
+  .btn:hover:not(:disabled) { background: #f0f2f6; }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+  .btn-clear {
+    grid-column: 1 / -1;
+    background: #fff5f5;
+    border-color: #ffcccc;
+    color: #cc0000;
+    font-size: .92rem;
+    padding: 10px;
+  }
+  .btn-clear:hover { background: #ffe8e8; }
+
+  /* SPINNER */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 15px; height: 15px;
+    border: 2px solid #ccc;
+    border-top-color: #555;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  .loading .spinner { display: inline-block; }
+  .loading .btn-label { display: none; }
+
+  /* OUTPUT */
+  #output-section { display: none; }
+  .output-wrap { position: relative; }
+  .output-textarea {
+    width: 100%; min-height: 150px;
+    padding: 12px 14px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    background: #f0f2f6;
+    font-size: 1rem;
+    font-family: inherit;
+    color: #31333f;
+    resize: vertical;
+    line-height: 1.6;
+  }
+  .copy-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: #fff; border: 1px solid #d0d0d0;
+    border-radius: 6px; padding: 4px 10px;
+    font-size: .78rem; cursor: pointer;
+    color: #555; font-family: inherit;
+  }
+  .copy-btn:hover { background: #f0f2f6; }
+
+  /* AUDIO */
+  #audio-section { display: none; }
+  audio { width: 100%; border-radius: 8px; margin-top: 4px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #31333f; color: #fff;
+    padding: 10px 22px; border-radius: 8px;
+    font-size: .88rem; font-weight: 600;
+    z-index: 999; transition: transform .3s ease;
+    pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* FOOTER */
+  footer { text-align: center; color: #9a9a9a; font-size: .88rem; margin-top: 48px; }
+
+  @media (max-width: 480px) {
+    .btn-row { grid-template-columns: 1fr; }
+    .btn-clear { grid-column: 1; }
+    .header h1 { font-size: 1.45rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>🌟 English → Hindi Learning App 🌟</h1>
+    <h3>By Pentagon Pillars 👧👦</h3>
+  </div>
+
+  <hr/>
+
+  <!-- STUDENT INFO -->
+  <div class="section-label">🧒 Student Details</div>
+  <input type="text" id="student-name" placeholder="Enter your name"/>
+
+  <hr/>
+
+  <!-- TEXT INPUT -->
+  <div class="section-label">✏️ Type English Text</div>
+  <textarea id="english-text" placeholder="Type English sentence here..."></textarea>
+
+  <hr/>
+
+  <!-- PDF UPLOAD -->
+  <div class="section-label">📘 Upload NCERT PDF</div>
+  <p style="font-size:.9rem;color:#555;margin-bottom:10px;">Upload your book (PDF)</p>
+  <div class="upload-box" id="drop-zone">
+    <div class="upload-icon">☁️</div>
+    <div class="upload-text">
+      <p>Drag and drop file here</p>
+      <small>Limit 200MB per file • PDF</small>
+    </div>
+    <button class="browse-btn" type="button" onclick="document.getElementById('pdf-input').click()">Browse files</button>
+    <input type="file" id="pdf-input" accept=".pdf"/>
+  </div>
+  <div id="pdf-name">✅ <span id="pdf-name-text"></span></div>
+
+  <hr/>
+
+  <!-- WARNING -->
+  <div class="warn-box" id="warn-box">Please enter text or upload a PDF.</div>
+
+  <!-- BUTTONS -->
+  <div class="btn-row">
+    <button class="btn" id="translate-btn" type="button">
+      <div class="spinner" id="t-spinner"></div>
+      <span class="btn-label">🟢 Translate</span>
+    </button>
+    <button class="btn" id="audio-btn" type="button">
+      <div class="spinner" id="a-spinner"></div>
+      <span class="btn-label">🔊 Listen Hindi Audio</span>
+    </button>
+    <button class="btn btn-clear" id="clear-btn" type="button">🗑️ Clear All</button>
+  </div>
+
+  <hr/>
+
+  <!-- OUTPUT -->
+  <div id="output-section">
+    <div class="section-label">📝 Hindi Output</div>
+    <div class="output-wrap">
+      <textarea class="output-textarea" id="hindi-output-box" readonly></textarea>
+      <button class="copy-btn" id="copy-btn">📋 Copy</button>
+    </div>
+    <hr/>
+  </div>
+
+  <!-- AUDIO -->
+  <div id="audio-section">
+    <div class="section-label">🔊 Audio Output</div>
+    <audio id="audio-player" controls></audio>
+    <hr/>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>Made By Pentagon Pillars 📚</footer>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// STATE
+let pdfFile     = null;
+let hindiResult = '';
+const speechSynth = window.speechSynthesis;
+let utterance   = null;
+
+// PDF UPLOAD
+const dropZone  = document.getElementById('drop-zone');
+const pdfInput  = document.getElementById('pdf-input');
+const pdfNameEl = document.getElementById('pdf-name');
+
+pdfInput.addEventListener('change', e => handlePdfFile(e.target.files[0]));
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.style.background = '#e8eaf0'; });
+dropZone.addEventListener('dragleave', ()  => dropZone.style.background = '');
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.style.background = '';
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') handlePdfFile(f);
+  else showToast('⚠️ Please drop a PDF file.');
+});
+
+function handlePdfFile(f) {
+  if (!f) return;
+  pdfFile = f;
+  pdfNameEl.style.display = 'block';
+  document.getElementById('pdf-name-text').textContent = f.name;
+}
+
+// PDF.js
+async function loadPdfJs() {
+  if (window.pdfjsLib) return;
+  await new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+async function extractPdfText(file) {
+  await loadPdfJs();
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page    = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(' ') + '\n';
+  }
+  return text.trim();
+}
+
+// GOOGLE TRANSLATE
+async function translateChunk(text) {
+  const url  = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`;
+  const res  = await fetch(url);
+  if (!res.ok) throw new Error('Translation failed');
+  const data = await res.json();
+  return data[0].map(s => s[0]).join('');
+}
+
+async function translateText(text) {
+  const chunks = [];
+  for (let i = 0; i < text.length; i += 1000) chunks.push(text.slice(i, i + 1000));
+  const out = [];
+  for (const c of chunks) out.push(await translateChunk(c));
+  return out.join(' ');
+}
+
+// GET INPUT
+async function getInputText() {
+  const typed = document.getElementById('english-text').value.trim();
+  if (typed) return typed;
+  if (pdfFile) return await extractPdfText(pdfFile);
+  return null;
+}
+
+// TTS
+function speakHindi(text) {
+  speechSynth.cancel();
+  utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'hi-IN'; utterance.rate = 0.85; utterance.pitch = 1.1;
+  const voices = speechSynth.getVoices();
+  const voice  = voices.find(v => v.lang === 'hi-IN') || voices.find(v => v.lang.startsWith('hi'));
+  if (voice) utterance.voice = voice;
+  speechSynth.speak(utterance);
+}
+
+// TRANSLATE BUTTON
+document.getElementById('translate-btn').addEventListener('click', async () => {
+  hideWarn();
+  let inputText;
+  try { inputText = await getInputText(); } catch(e) { showWarn('Could not read PDF: ' + e.message); return; }
+  if (!inputText) { showWarn('Please enter text or upload a PDF first!'); return; }
+
+  setLoading('translate-btn', 't-spinner', true);
+  try {
+    hindiResult = await translateText(inputText.slice(0, 4000));
+    document.getElementById('hindi-output-box').value = hindiResult;
+    document.getElementById('output-section').style.display = 'block';
+    showToast('✅ Translation complete!');
+  } catch(e) { showWarn('Translation failed. Check internet connection.'); }
+  setLoading('translate-btn', 't-spinner', false);
+});
+
+// AUDIO BUTTON
+document.getElementById('audio-btn').addEventListener('click', async () => {
+  hideWarn();
+  if (!hindiResult) {
+    let inputText;
+    try { inputText = await getInputText(); } catch(e) { showWarn('Could not read PDF.'); return; }
+    if (!inputText) { showWarn('Please enter text or upload a PDF first!'); return; }
+    setLoading('audio-btn', 'a-spinner', true);
+    try {
+      hindiResult = await translateText(inputText.slice(0, 4000));
+      document.getElementById('hindi-output-box').value = hindiResult;
+      document.getElementById('output-section').style.display = 'block';
+    } catch(e) {
+      showWarn('Translation failed. Please try again.');
+      setLoading('audio-btn', 'a-spinner', false); return;
+    }
+    setLoading('audio-btn', 'a-spinner', false);
+  }
+  document.getElementById('audio-section').style.display = 'block';
+  speakHindi(hindiResult);
+  showToast('🔊 Playing Hindi audio...');
+});
+
+// CLEAR BUTTON
+document.getElementById('clear-btn').addEventListener('click', () => {
+  document.getElementById('english-text').value     = '';
+  document.getElementById('student-name').value     = '';
+  document.getElementById('hindi-output-box').value = '';
+  pdfFile = null; hindiResult = '';
+  pdfNameEl.style.display = 'none';
+  pdfInput.value = '';
+  document.getElementById('output-section').style.display = 'none';
+  document.getElementById('audio-section').style.display  = 'none';
+  speechSynth.cancel();
+  hideWarn();
+  showToast('🗑️ Cleared!');
+});
+
+// COPY BUTTON
+document.getElementById('copy-btn').addEventListener('click', () => {
+  if (!hindiResult) return;
+  navigator.clipboard.writeText(hindiResult).then(() => showToast('📋 Copied!'));
+});
+
+// UTILS
+function setLoading(btnId, spinnerId, state) {
+  const btn = document.getElementById(btnId);
+  if (state) { btn.classList.add('loading'); btn.disabled = true; }
+  else        { btn.classList.remove('loading'); btn.disabled = false; }
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+function showWarn(msg) {
+  const w = document.getElementById('warn-box');
+  w.textContent = msg; w.classList.add('show');
+}
+function hideWarn() { document.getElementById('warn-box').classList.remove('show'); }
+
+window.addEventListener('load', () => speechSynth.getVoices());
+speechSynth.onvoiceschanged = () => speechSynth.getVoices();
+</script>
+</body>
+</html>
